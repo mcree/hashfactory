@@ -1,9 +1,11 @@
 package org.hashfactory.client.filewalker;
 
-import java.nio.channels.ReadableByteChannel;
-
 public interface FileHandler {
 
-	void handleFile(FileDescr descr, ReadableByteChannel data);
+	void handleFileOpen(FileDescr descr);
+
+	void handleFileData(FileDescr descr, byte[] data);
+
+	void handleFileClose(FileDescr descr);
 
 }

@@ -41,5 +41,11 @@ public class FileDescr {
 	public void setSize(Long size) {
 		this.size = size;
 	}
+
+	@Override
+	public String toString() {
+		return "FileDescr [baseName=" + baseName + ", fullPath=" + fullPath
+				+ ", mimeType=" + mimeType + ", size=" + size + "]";
+	}
 	
 }
