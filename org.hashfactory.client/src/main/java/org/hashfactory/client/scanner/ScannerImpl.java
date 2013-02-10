@@ -10,11 +10,16 @@ import org.hashfactory.client.filewalker.FileDescr;
 import org.hashfactory.client.filewalker.FileHandler;
 import org.hashfactory.client.filewalker.FileWalker;
 import org.hashfactory.client.filewalker.FileWalkerFactory;
+import org.hashfactory.model.dao.HashEntryDao;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 
 public class ScannerImpl implements ProgramModule, Scanner {
 
+	@Autowired(required=true)
+	HashEntryDao edao;
+	
 	static Logger logger = LoggerFactory.getLogger(Scanner.class);
 
 	ScannerCmdLineOpts cmdLine;

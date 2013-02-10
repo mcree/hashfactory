@@ -31,7 +31,7 @@ public class FileWalkerImpl implements FileWalker {
 		if (f.canRead()) {
 			if (f.isFile()) {
 				try {
-					int bufsize = 64;
+					int bufsize = 64*1024;
 					ByteBuffer buf = ByteBuffer.allocate(bufsize);
 					FileDescr descr = new FileDescr();
 					descr.setBaseName(f.getName());
