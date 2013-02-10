@@ -1,7 +1,12 @@
 package org.hashfactory.client.filewalker;
 
 import java.io.File;
+import java.io.RandomAccessFile;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileChannel.MapMode;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,18 +30,39 @@ public class FileWalkerImpl implements FileWalker {
 		File f = new File(path);
 		if (f.canRead()) {
 			if (f.isFile()) {
-				for (FileHandler h : handlers) {
-					try {
-						FileDescr descr = new FileDescr();
-						descr.setBaseName(f.getName());
-						descr.setFullPath(f.getCanonicalPath());
-						descr.setSize(f.length());
-						descr.setMimeType("application/octet-stream");
+				try {
+					int bufsize = 64;
+					ByteBuffer buf = ByteBuffer.allocate(bufsize);
+					FileDescr descr = new FileDescr();
+					descr.setBaseName(f.getName());
+					descr.setFullPath(f.getCanonicalPath());
+					descr.setSize(f.length());
+					descr.setMimeType("application/octet-stream");
+					for (FileHandler h : handlers) {
 						h.handleFileOpen(descr);
-					} catch (Throwable e) {
-						logger.error("error getting file descriptor for "
-								+ path, e);
 					}
+					FileChannel channel = new RandomAccessFile(f, "r")
+							.getChannel();
+					channel.map(MapMode.READ_ONLY, 0, f.length());
+					while (channel.read(buf) > 0) {
+						for (FileHandler h : handlers) {
+							if (buf.position() < bufsize) {
+								h.handleFileData(
+										descr,
+										Arrays.copyOf(buf.array(),
+												buf.position()));
+							} else {
+								h.handleFileData(descr, buf.array());
+							}
+							buf.rewind();
+						}
+					}
+					for (FileHandler h : handlers) {
+						h.handleFileClose(descr);
+					}
+
+				} catch (Throwable e) {
+					logger.error("error getting file descriptor for " + path, e);
 				}
 			}
 			if (f.isDirectory()) {
