@@ -7,9 +7,18 @@ import java.nio.channels.FileChannel;
 import java.nio.channels.FileChannel.MapMode;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+
+import net.java.truevfs.access.TFile;
+import net.java.truevfs.access.TFileInputStream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import eu.medsea.mimeutil.MimeType;
+import eu.medsea.mimeutil.MimeUtil;
+import eu.medsea.mimeutil.MimeUtil2;
+import eu.medsea.mimeutil.detector.MagicMimeMimeDetector;
 
 // TODO: upgrade to JAVA SE 7 NIO Files class usage
 public class FileWalkerImpl implements FileWalker {
@@ -17,6 +26,16 @@ public class FileWalkerImpl implements FileWalker {
 	private Logger logger = LoggerFactory.getLogger(getClass());
 
 	private ArrayList<FileHandler> handlers = new ArrayList<FileHandler>();
+
+	private MimeType unknownMime;
+
+	private MimeUtil2 mimeUtil;
+
+	public FileWalkerImpl() {
+		unknownMime = new MimeType("application/octet-stream");
+		mimeUtil = new MimeUtil2();
+		mimeUtil.registerMimeDetector(MagicMimeMimeDetector.class.getName());
+	}
 
 	@Override
 	public void walk() {
@@ -27,12 +46,12 @@ public class FileWalkerImpl implements FileWalker {
 		if (logger.isDebugEnabled()) {
 			logger.debug("walking " + path);
 		}
-		File f = new File(path);
+		TFile f = new TFile(path);
 		if (f.canRead()) {
 			if (f.isFile()) {
 				try {
-					int bufsize = 64*1024;
-					ByteBuffer buf = ByteBuffer.allocate(bufsize);
+					int bufsize = 64 * 1024;
+					//ByteBuffer buf = ByteBuffer.allocate(bufsize);
 					FileDescr descr = new FileDescr();
 					descr.setBaseName(f.getName());
 					descr.setFullPath(f.getCanonicalPath());
@@ -41,38 +60,50 @@ public class FileWalkerImpl implements FileWalker {
 					for (FileHandler h : handlers) {
 						h.handleFileOpen(descr);
 					}
-					FileChannel channel = new RandomAccessFile(f, "r")
-							.getChannel();
-					channel.map(MapMode.READ_ONLY, 0, f.length());
-					while (channel.read(buf) > 0) {
+					TFile rf = new TFile(f);
+					TFileInputStream is = new TFileInputStream(rf);
+					//FileChannel channel = rf.getChannel();
+					//channel.map(MapMode.READ_ONLY, 0, f.length());
+					int block = 0;
+					int read = 0;
+					byte[] buf = new byte[bufsize];
+					byte[] data;
+					while ((read = is.read(buf)) > 0) {
+						block++;
+
+						if (read < bufsize) {
+							data = Arrays.copyOf(buf, read);
+						} else {
+							data = buf;
+						}
+
+						if (block == 1) {
+							descr.setMimeType(MimeUtil.getMostSpecificMimeType(
+									mimeUtil.getMimeTypes(data, unknownMime))
+									.toString());
+						}
+
 						for (FileHandler h : handlers) {
-							if (buf.position() < bufsize) {
-								h.handleFileData(
-										descr,
-										Arrays.copyOf(buf.array(),
-												buf.position()));
-							} else {
-								h.handleFileData(descr, buf.array());
-							}
-							buf.rewind();
+								h.handleFileData(descr, data);
 						}
 					}
 					for (FileHandler h : handlers) {
 						h.handleFileClose(descr);
 					}
+					is.close();
 
 				} catch (Throwable e) {
 					logger.error("error getting file descriptor for " + path, e);
 				}
 			}
-			if (f.isDirectory()) {
+			if (f.isDirectory() || f.isArchive()) {
 				try {
 					for (String e : f.list()) {
 						if (logger.isTraceEnabled()) {
 							logger.trace("entering " + path
-									+ File.separatorChar + e);
+									+ TFile.separatorChar + e);
 						}
-						walk(path + File.separatorChar + e);
+						walk(path + TFile.separatorChar + e);
 					}
 				} catch (Throwable e) {
 					logger.error("error listing contents for " + path, e);

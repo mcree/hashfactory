@@ -43,7 +43,7 @@ public class ScannerImpl implements ProgramModule, Scanner {
 
 		String dir = this.cmdLine.getDir();
 
-		logger.info("scanning: " + dir);
+		logger.trace("scanning: " + dir);
 
 		FileWalker walker = FileWalkerFactory.getInstance().createFileWalker();
 		walker.setBase(dir);
@@ -51,23 +51,23 @@ public class ScannerImpl implements ProgramModule, Scanner {
 
 			@Override
 			public void handleFileOpen(FileDescr descr) {
-				logger.info("handling open: " + descr);
+				logger.trace("handling open: " + descr);
 				sha256Digests.put(descr, df.createSha256Digest());
 				md5Digests.put(descr, df.createMd5Digest());
 			}
 
 			@Override
 			public void handleFileClose(FileDescr descr) {
-				logger.info("handling close: " + descr);
+				logger.trace("handling close: " + descr);
 				byte[] sha256 = sha256Digests.get(descr).digest();
 				byte[] md5 = md5Digests.get(descr).digest();
-				logger.info("sha256 "+DigestUtil.digest2Hex(sha256));
-				logger.info("md5 "+DigestUtil.digest2Hex(md5));
+				logger.trace("sha256 "+DigestUtil.digest2Hex(sha256));
+				logger.trace("md5 "+DigestUtil.digest2Hex(md5));
 			}
 
 			@Override
 			public void handleFileData(FileDescr descr, byte[] data) {
-				logger.info("handling data: " + data.length + " bytes, "
+				logger.trace("handling data: " + data.length + " bytes, "
 						+ descr);
 				sha256Digests.get(descr).update(data);
 				md5Digests.get(descr).update(data);
