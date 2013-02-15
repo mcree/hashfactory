@@ -4,6 +4,6 @@ public interface FileWalker {
 	
 	void addFileHandler(FileHandler handler);
 	void setBase(String base);
-	void walk();
+	void walk() throws Throwable;
 	
 }

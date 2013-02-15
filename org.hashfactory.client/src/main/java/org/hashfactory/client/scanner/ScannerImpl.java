@@ -1,8 +1,12 @@
 package org.hashfactory.client.scanner;
 
+import java.io.File;
+import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
+
+import javax.xml.stream.XMLStreamException;
 
 import org.hashfactory.client.CmdLineOpts;
 import org.hashfactory.client.ProgramModule;
@@ -10,16 +14,18 @@ import org.hashfactory.client.filewalker.FileDescr;
 import org.hashfactory.client.filewalker.FileHandler;
 import org.hashfactory.client.filewalker.FileWalker;
 import org.hashfactory.client.filewalker.FileWalkerFactory;
+import org.hashfactory.model.HashEntry;
 import org.hashfactory.model.dao.HashEntryDao;
+import org.hashfactory.model.dao.HashFileWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public class ScannerImpl implements ProgramModule, Scanner {
 
-	@Autowired(required=true)
+	@Autowired(required = true)
 	HashEntryDao edao;
-	
+
 	static Logger logger = LoggerFactory.getLogger(Scanner.class);
 
 	ScannerCmdLineOpts cmdLine;
@@ -45,35 +51,63 @@ public class ScannerImpl implements ProgramModule, Scanner {
 
 		logger.trace("scanning: " + dir);
 
-		FileWalker walker = FileWalkerFactory.getInstance().createFileWalker();
-		walker.setBase(dir);
-		walker.addFileHandler(new FileHandler() {
-
-			@Override
-			public void handleFileOpen(FileDescr descr) {
-				logger.trace("handling open: " + descr);
-				sha256Digests.put(descr, df.createSha256Digest());
-				md5Digests.put(descr, df.createMd5Digest());
+		try {
+			File outFile = new File(this.cmdLine.getOut());
+			if (outFile.exists() && this.cmdLine.getOverwrite()) {
+				outFile.delete();
 			}
 
-			@Override
-			public void handleFileClose(FileDescr descr) {
-				logger.trace("handling close: " + descr);
-				byte[] sha256 = sha256Digests.get(descr).digest();
-				byte[] md5 = md5Digests.get(descr).digest();
-				logger.trace("sha256 "+DigestUtil.digest2Hex(sha256));
-				logger.trace("md5 "+DigestUtil.digest2Hex(md5));
-			}
+			final HashFileWriter writer = new HashFileWriter(
+					this.cmdLine.getOut());
 
-			@Override
-			public void handleFileData(FileDescr descr, byte[] data) {
-				logger.trace("handling data: " + data.length + " bytes, "
-						+ descr);
-				sha256Digests.get(descr).update(data);
-				md5Digests.get(descr).update(data);
-			}
-		});
-		walker.walk();
+			FileWalker walker = FileWalkerFactory.getInstance()
+					.createFileWalker();
+			walker.setBase(dir);
+			walker.addFileHandler(new FileHandler() {
+
+				@Override
+				public void handleFileOpen(FileDescr descr) {
+					logger.trace("handling open: " + descr);
+					sha256Digests.put(descr, df.createSha256Digest());
+					md5Digests.put(descr, df.createMd5Digest());
+				}
+
+				@Override
+				public void handleFileClose(FileDescr descr) throws Throwable {
+					logger.trace("handling close: " + descr);
+
+					{
+						String sha256 = DigestUtil.digest2Hex(sha256Digests
+								.get(descr).digest());
+						sha256Digests.remove(descr);
+						writer.write(new HashEntry("SHA256", sha256, descr
+								.getMimeType(), descr.getSize(), descr
+								.getBaseName(), descr.getFullPath()));
+					}
+
+					{
+						String md5 = DigestUtil.digest2Hex(md5Digests
+								.get(descr).digest());
+						md5Digests.remove(descr);
+						writer.write(new HashEntry("MD5", md5, descr
+								.getMimeType(), descr.getSize(), descr
+								.getBaseName(), descr.getFullPath()));
+					}
+				}
+
+				@Override
+				public void handleFileData(FileDescr descr, byte[] data) {
+					logger.trace("handling data: " + data.length + " bytes, "
+							+ descr);
+					sha256Digests.get(descr).update(data);
+					md5Digests.get(descr).update(data);
+				}
+			});
+			walker.walk();
+			writer.close();
+		} catch (Throwable e) {
+			logger.error("failure while scanning files", e);
+		}
 	}
 
 }

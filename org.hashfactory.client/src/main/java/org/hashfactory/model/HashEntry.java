@@ -1,19 +1,29 @@
 package org.hashfactory.model;
 
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
+
 public class HashEntry {
 
-	/**
-	 * @param hash
-	 * @param hashSet
-	 */
-	private HashEntry(String hash, String hashSet) {
+	public HashEntry(String hashType, String hashValue, String mime, Long size,
+			String name, String path) {
 		super();
-		this.hash = hash;
-		this.hashSet = hashSet;
+		this.setHash(hashType, hashValue);
+		this.mime = mime;
+		this.size = size;
+		this.names.add(name);
+		this.paths.add(path);
+		this.lastModify = new Date();
 	}
 
 	private String hash;
-	private String hashSet;
+	private Set<String> fileSets = new HashSet<String>();
+	private Date lastModify;
+	private String mime;
+	private Long size;
+	private Set<String> names = new HashSet<String>();;
+	private Set<String> paths = new HashSet<String>();;
 
 	public String getHash() {
 		return hash;
@@ -23,12 +33,8 @@ public class HashEntry {
 		this.hash = hash;
 	}
 
-	public String getHashSet() {
-		return hashSet;
-	}
-
-	public void setHashSet(String hashSet) {
-		this.hashSet = hashSet;
+	public void setHash(String algo, String value) {
+		this.hash = "{" + algo + "}" + value;
 	}
 
 	@Override
@@ -56,9 +62,52 @@ public class HashEntry {
 		return true;
 	}
 
-	@Override
-	public String toString() {
-		return "HashEntry [hash=" + hash + ", hashSet=" + hashSet + "]";
+	public Set<String> getFileSets() {
+		return fileSets;
+	}
+
+	public void setFileSets(Set<String> hashSets) {
+		this.fileSets = hashSets;
+	}
+
+	public Date getLastModify() {
+		return lastModify;
+	}
+
+	public void setLastModify(Date lastModify) {
+		this.lastModify = lastModify;
+	}
+
+	public String getMime() {
+		return mime;
+	}
+
+	public void setMime(String mime) {
+		this.mime = mime;
+	}
+
+	public Long getSize() {
+		return size;
+	}
+
+	public void setSize(Long size) {
+		this.size = size;
+	}
+
+	public Set<String> getNames() {
+		return names;
+	}
+
+	public void setNames(Set<String> names) {
+		this.names = names;
+	}
+
+	public Set<String> getPaths() {
+		return paths;
+	}
+
+	public void setPaths(Set<String> paths) {
+		this.paths = paths;
 	}
 
 }

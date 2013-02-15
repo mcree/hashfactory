@@ -47,11 +47,6 @@
   	</dependency>
   	<dependency>
   		<groupId>net.java.truevfs</groupId>
-  		<artifactId>truevfs-access</artifactId>
-  		<version>0.10.1</version>
-  	</dependency>
-  	<dependency>
-  		<groupId>net.java.truevfs</groupId>
   		<artifactId>truevfs-driver-zip</artifactId>
   		<version>0.10.1</version>
   	</dependency>
@@ -90,6 +85,32 @@
   		<groupId>net.java.truevfs</groupId>
   		<artifactId>truevfs-kernel-impl</artifactId>
   		<version>0.10.1</version>
+  	</dependency>
+  	<dependency>
+  		<groupId>net.java.truevfs</groupId>
+  		<artifactId>truevfs-access</artifactId>
+  		<version>0.10.1</version>
+  	</dependency>
+  	<dependency>
+  		<groupId>net.java.truevfs</groupId>
+  		<artifactId>truevfs-kernel-spec</artifactId>
+  		<version>0.10.1</version>
+  	</dependency>
+  	<dependency>
+  		<groupId>org.codehaus.staxmate</groupId>
+  		<artifactId>staxmate</artifactId>
+  		<version>2.0.1</version>
+  		<exclusions>
+  			<exclusion>
+  				<artifactId>stax2-api</artifactId>
+  				<groupId>org.codehaus.woodstox</groupId>
+  			</exclusion>
+  		</exclusions>
+  	</dependency>
+  	<dependency>
+  		<groupId>org.codehaus.woodstox</groupId>
+  		<artifactId>woodstox-core-lgpl</artifactId>
+  		<version>4.1.4</version>
   	</dependency>
   </dependencies>
 </project>

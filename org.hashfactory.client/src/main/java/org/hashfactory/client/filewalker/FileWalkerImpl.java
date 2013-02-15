@@ -1,16 +1,11 @@
 package org.hashfactory.client.filewalker;
 
-import java.io.File;
-import java.io.RandomAccessFile;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
-import java.nio.channels.FileChannel.MapMode;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 
 import net.java.truevfs.access.TFile;
 import net.java.truevfs.access.TFileInputStream;
+import net.java.truevfs.access.TVFS;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,63 +33,68 @@ public class FileWalkerImpl implements FileWalker {
 	}
 
 	@Override
-	public void walk() {
+	public void walk() throws Throwable {
 		walk(base);
+		try {
+			TVFS.umount();
+		} catch (Throwable ignored) {
+		}
 	}
 
-	private void walk(String path) {
+	private void walk(String path) throws Throwable {
 		if (logger.isDebugEnabled()) {
 			logger.debug("walking " + path);
 		}
 		TFile f = new TFile(path);
 		if (f.canRead()) {
 			if (f.isFile()) {
+				int bufsize = 640 * 1024; // ought to be enough ;-)
+				FileDescr descr = new FileDescr();
 				try {
-					int bufsize = 64 * 1024;
-					//ByteBuffer buf = ByteBuffer.allocate(bufsize);
-					FileDescr descr = new FileDescr();
+					// ByteBuffer buf = ByteBuffer.allocate(bufsize);
 					descr.setBaseName(f.getName());
 					descr.setFullPath(f.getCanonicalPath());
 					descr.setSize(f.length());
 					descr.setMimeType("application/octet-stream");
-					for (FileHandler h : handlers) {
-						h.handleFileOpen(descr);
-					}
-					TFile rf = new TFile(f);
-					TFileInputStream is = new TFileInputStream(rf);
-					//FileChannel channel = rf.getChannel();
-					//channel.map(MapMode.READ_ONLY, 0, f.length());
-					int block = 0;
-					int read = 0;
-					byte[] buf = new byte[bufsize];
-					byte[] data;
-					while ((read = is.read(buf)) > 0) {
-						block++;
-
-						if (read < bufsize) {
-							data = Arrays.copyOf(buf, read);
-						} else {
-							data = buf;
-						}
-
-						if (block == 1) {
-							descr.setMimeType(MimeUtil.getMostSpecificMimeType(
-									mimeUtil.getMimeTypes(data, unknownMime))
-									.toString());
-						}
-
-						for (FileHandler h : handlers) {
-								h.handleFileData(descr, data);
-						}
-					}
-					for (FileHandler h : handlers) {
-						h.handleFileClose(descr);
-					}
-					is.close();
-
 				} catch (Throwable e) {
 					logger.error("error getting file descriptor for " + path, e);
+					throw e;
 				}
+				for (FileHandler h : handlers) {
+					h.handleFileOpen(descr);
+				}
+				TFile rf = new TFile(f);
+				TFileInputStream is = new TFileInputStream(rf);
+				// FileChannel channel = rf.getChannel();
+				// channel.map(MapMode.READ_ONLY, 0, f.length());
+				int block = 0;
+				int read = 0;
+				byte[] buf = new byte[bufsize];
+				byte[] data;
+				while ((read = is.read(buf)) > 0) {
+					block++;
+
+					if (read < bufsize) {
+						data = Arrays.copyOf(buf, read);
+					} else {
+						data = buf;
+					}
+
+					if (block == 1) {
+						descr.setMimeType(MimeUtil.getMostSpecificMimeType(
+								mimeUtil.getMimeTypes(data, unknownMime))
+								.toString());
+					}
+
+					for (FileHandler h : handlers) {
+						h.handleFileData(descr, data);
+					}
+				}
+				for (FileHandler h : handlers) {
+					h.handleFileClose(descr);
+				}
+				is.close();
+
 			}
 			if (f.isDirectory() || f.isArchive()) {
 				try {
@@ -107,6 +107,7 @@ public class FileWalkerImpl implements FileWalker {
 					}
 				} catch (Throwable e) {
 					logger.error("error listing contents for " + path, e);
+					throw e;
 				}
 			}
 		} else {
