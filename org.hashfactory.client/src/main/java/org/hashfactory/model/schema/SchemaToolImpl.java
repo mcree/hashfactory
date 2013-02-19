@@ -59,7 +59,7 @@ public class SchemaToolImpl implements SchemaTool {
 
 		KeyspaceDefinition newKeyspace = HFactory.createKeyspaceDefinition(
 				SchemaDefinition.KEYSPACE_NAME, ThriftKsDef.DEF_STRATEGY_CLASS,
-				2, null);
+				1, null);
 
 		cf.getCluster().addKeyspace(newKeyspace, true);
 	}

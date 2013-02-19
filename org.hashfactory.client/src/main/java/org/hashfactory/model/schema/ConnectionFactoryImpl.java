@@ -9,7 +9,7 @@ public class ConnectionFactoryImpl implements ConnectionFactory {
 	@Override
 	public Cluster getCluster() {
 		return HFactory.getOrCreateCluster(SchemaDefinition.CLUSTER_NAME,
-				"localhost:9160");
+				"195.111.1.110:9160");
 	}
 
 	private Keyspace ksp;

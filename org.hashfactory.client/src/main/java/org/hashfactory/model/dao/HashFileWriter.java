@@ -1,12 +1,16 @@
 package org.hashfactory.model.dao;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.text.DateFormat;
 import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.zip.GZIPOutputStream;
 
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
@@ -18,15 +22,19 @@ import org.hashfactory.model.HashEntry;
 
 public class HashFileWriter {
 
-	private DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ") {
+	private static DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ") {
 		public Date parse(String source, ParsePosition pos) {
 			return super.parse(source.replaceFirst(":(?=[0-9]{2}$)", ""), pos);
 		}
 	};
+	
+	public static DateFormat getDateFormat() {
+		return df;
+	}
 
 	private SMOutputElement fileSet;
 	private SMOutputDocument doc;
-	private FileWriter out;
+	private Writer out;
 
 	public HashFileWriter(String fileName) throws XMLStreamException,
 			IOException {
@@ -37,7 +45,7 @@ public class HashFileWriter {
 		}
 		XMLOutputFactory factory = XMLOutputFactory.newInstance();
 		SMOutputFactory outf = new SMOutputFactory(factory);
-		out = new FileWriter(fileName, false);
+		out = new OutputStreamWriter(new GZIPOutputStream(new FileOutputStream(file, false)), "UTF-8");
 		doc = outf.createOutputDocument(out);
 		doc.setIndentation("\n  ", 1, 1);
 
@@ -55,7 +63,7 @@ public class HashFileWriter {
 	public void write(HashEntry entry) throws XMLStreamException {
 		SMOutputElement e = fileSet.addElement("entry");
 		e.addAttribute("hash", entry.getHash());
-		e.addAttribute("lastModify", df.format(entry.getLastModify()));
+		e.addAttribute("timestamp", df.format(entry.getTimestamp()));
 		e.addAttribute("mime", entry.getMime());
 		e.addAttribute("size", Long.toString(entry.getSize()));
 		for(String val : entry.getFileSets()) {

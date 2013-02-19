@@ -9,7 +9,7 @@ public class ScannerCmdLineOpts extends CmdLineOpts {
 	@Parameter(names = "--dir", description = "base directory", required = true)
 	private String dir;
 
-	@Parameter(names = "--out", description = "output file", required = true)
+	@Parameter(names = "--out", description = "output fileSet file", required = true)
 	private String out;
 
 	@Parameter(names = "--overwrite", description = "overwrite output file")

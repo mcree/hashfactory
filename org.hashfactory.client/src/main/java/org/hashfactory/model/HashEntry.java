@@ -14,12 +14,12 @@ public class HashEntry {
 		this.size = size;
 		this.names.add(name);
 		this.paths.add(path);
-		this.lastModify = new Date();
+		this.timestamp = new Date();
 	}
 
 	private String hash;
 	private Set<String> fileSets = new HashSet<String>();
-	private Date lastModify;
+	private Date timestamp;
 	private String mime;
 	private Long size;
 	private Set<String> names = new HashSet<String>();;
@@ -70,12 +70,12 @@ public class HashEntry {
 		this.fileSets = hashSets;
 	}
 
-	public Date getLastModify() {
-		return lastModify;
+	public Date getTimestamp() {
+		return timestamp;
 	}
 
-	public void setLastModify(Date lastModify) {
-		this.lastModify = lastModify;
+	public void setTimestamp(Date timestamp) {
+		this.timestamp = timestamp;
 	}
 
 	public String getMime() {

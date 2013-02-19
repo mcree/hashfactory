@@ -6,6 +6,8 @@ public class FileDescr {
 	
 	private String fullPath;
 	
+	private String relPath;
+	
 	private String mimeType;
 	
 	private Long size;
@@ -46,6 +48,14 @@ public class FileDescr {
 	public String toString() {
 		return "FileDescr [baseName=" + baseName + ", fullPath=" + fullPath
 				+ ", mimeType=" + mimeType + ", size=" + size + "]";
+	}
+
+	public String getRelPath() {
+		return relPath;
+	}
+
+	public void setRelPath(String relPath) {
+		this.relPath = relPath;
 	}
 	
 }

@@ -6,6 +6,8 @@ import me.prettyprint.hector.api.Cluster;
 
 import org.hashfactory.client.scanner.Scanner;
 import org.hashfactory.client.scanner.ScannerImpl;
+import org.hashfactory.client.uploader.Uploader;
+import org.hashfactory.client.uploader.UploaderImpl;
 import org.hashfactory.model.HashEntry;
 import org.hashfactory.model.dao.HashEntryDao;
 import org.hashfactory.model.dao.HashEntryDaoImpl;
@@ -22,6 +24,11 @@ public class ClientContextConfig {
 	@Bean
 	Scanner scanner() throws NoSuchAlgorithmException {
 		return new ScannerImpl();
+	}
+	
+	@Bean
+	Uploader uploader() {
+		return new UploaderImpl();
 	}
 
 	@Bean
@@ -42,5 +49,6 @@ public class ClientContextConfig {
 	@Bean HashEntryDao hashEntryDao() {
 		return new HashEntryDaoImpl();
 	}
+	
 	
 }

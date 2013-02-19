@@ -82,16 +82,16 @@ public class ScannerImpl implements ProgramModule, Scanner {
 						sha256Digests.remove(descr);
 						writer.write(new HashEntry("SHA256", sha256, descr
 								.getMimeType(), descr.getSize(), descr
-								.getBaseName(), descr.getFullPath()));
+								.getBaseName(), descr.getRelPath()));
 					}
 
 					{
 						String md5 = DigestUtil.digest2Hex(md5Digests
 								.get(descr).digest());
 						md5Digests.remove(descr);
-						writer.write(new HashEntry("MD5", md5, descr
-								.getMimeType(), descr.getSize(), descr
-								.getBaseName(), descr.getFullPath()));
+//						writer.write(new HashEntry("MD5", md5, descr
+//								.getMimeType(), descr.getSize(), descr
+//								.getBaseName(), descr.getRelPath()));
 					}
 				}
 
